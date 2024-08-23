@@ -1,0 +1,9 @@
+graft kegg_pathway_profiler
+include kegg_pathway_profiler/data/database.pkl.gz
+include setup.py
+include LICENSE
+include README.md
+include requirements.txt
+global-exclude *.py[cod]
+global-exclude Icon*
+global-exclude .DS_Store
