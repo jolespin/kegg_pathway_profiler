@@ -2,6 +2,7 @@ import warnings
 from collections import defaultdict, OrderedDict
 from scipy.stats import false_discovery_control, hypergeom #, fisher_exact,nchypergeom_wallenius 
 import pandas as pd
+from tqdm import tqdm
 
 from .utils import check_argument_choice
 from .pathways import (

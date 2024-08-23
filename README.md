@@ -49,6 +49,7 @@ profile-pathway-coverage.py -i data/test/kos.genomes.tsv -o data/test/pathway-pr
 
 ## Python Usage:
 
+### Evaluate pathway coverage
 ```python
 import kegg_pathway_profiler as kpp
 # Load Database
@@ -107,7 +108,21 @@ results["most_complete_path"]
 #  'K01834',
 #  'K01689',
 #  'K00873']
+
 ```
+
+### Most complete path set enrichment (e.g., step enrichment)
+
+```python
+df_enrichment = kpp.enrichment.unweighted_pathway_enrichment_wrapper(
+    evaluation_kos=evaluation_kos, 
+    database=database,
+    background_set=None,
+)
+```
+![](images/enrichment.png)
+
+
 
 ## Documentation: 
 
