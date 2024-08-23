@@ -1,5 +1,7 @@
 # KEGG Pathway Profiler
-`KEGG Pathway Profiler` is a pathway profiling tool designed for traversing metabolic pathway graphs, identifying most complete paths based on an evaluation set of KEGG orthologs (KO), and generalized for internal usage within Python and via cli executables.  This package is a reimplementation of [kegg-pathways-completeness-tool](https://github.com/EBI-Metagenomics/kegg-pathways-completeness-tool) (e.g., base code and theory).  For any publications or usage, please cite the original implementation and credit the lead developer (See Acknowledgements below).
+`KEGG Pathway Profiler` is a pathway profiling tool designed for traversing metabolic pathway graphs, identifying most complete paths based on an evaluation set of KEGG orthologs (KO), and generalized for internal usage within Python and via cli executables.  This package is a reimplementation of [kegg-pathways-completeness-tool](https://github.com/EBI-Metagenomics/kegg-pathways-completeness-tool) (e.g., base code and theory).  
+
+For any publications or usage, please cite the original implementation and credit the lead developer (See [Acknowledgements](#acknowledgements) below).
 
 ## Installation:
 
