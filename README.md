@@ -1,5 +1,5 @@
 # KEGG Pathway Profiler
-`KEGG Pathway Profiler` is a pathway profiling tool designed for traversing metabolic pathway graphs, identifying most complete paths based on an evaluation set of KEGG orthologs (KO), and generalized for internal usage within Python and via cli executables.  This package is a reimplementation of [kegg-pathways-completeness-tool](https://github.com/EBI-Metagenomics/kegg-pathways-completeness-tool) (e.g., base code and theory).  
+`KEGG Pathway Profiler` is a pathway profiling tool designed for traversing metabolic pathway graphs, identifying most complete paths based on an evaluation set of KEGG orthologs (KO), and generalized for internal usage within Python and via CLI executables.  This package is a reimplementation of [kegg-pathways-completeness-tool](https://github.com/EBI-Metagenomics/kegg-pathways-completeness-tool) (e.g., base code and theory).  
 
 For any publications or usage, please cite the original implementation and credit the lead developer (See [Acknowledgements](#acknowledgements) below).
 
@@ -22,6 +22,16 @@ tqdm
 ## CLI Usage:
 
 ### Fetching and building the database:
+
+**Option 1:** 
+```
+# Download and build the database
+build-pathway-database.py \
+    -d data/database.pkl.gz \ # Default: site-packages/kegg_pathway_profiler/data/database.pkl.gz
+    --download \
+```
+
+**Option 2:**
 ```
 # Fetch the database
 mkdir -p data/
@@ -34,7 +44,6 @@ build-pathway-database.py \
     -n data/pathway_names.tsv \
     -c data/pathway_classes.tsv \
 ```
-Note: These 2 steps will be combined into 1 step with the `--download` argument but this needs to be debugged.
 
 ### Profile pathway coverage
 

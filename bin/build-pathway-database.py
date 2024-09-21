@@ -116,6 +116,7 @@ def main(args=None):
     if database_version_filepath.endswith("."):
         database_version_filepath = database_version_filepath[:-1]
     database_version_filepath += ".version"
+    database_table_filepath = database_version_filepath[:-8] + ".tsv"
     
     # Intermediate files
     if opts.intermediate_directory == "auto":
@@ -163,7 +164,7 @@ def main(args=None):
                     if line:
                         if line.startswith("DEFINITION"):
                             database[id]["definition"] = line[12:]
-                        elif line.startswith("CLASSES"):
+                        elif line.startswith("CLASS"):
                             database[id]["classes"] = line[12:]
                             
     else:
@@ -225,6 +226,13 @@ def main(args=None):
     with open_file_writer(database_version_filepath) as f:
         print("VERSION:", opts.database_version, file=f)
         print("CREATED:", now, file=f)
+        
+   # Write Database KO list
+    logger.info(f"Writing database pathway table: {database_table_filepath}")
+    with open_file_writer(database_table_filepath) as f:
+        for id_pathway, d in tqdm(database.items(), desc=description, unit=" Pathways"):
+            for id_ko in d["ko_to_nodes"]:
+                print(id_pathway, id_ko, sep="\t", file=f)
 
     # Summarize database
     size_in_bytes = os.stat(opts.database).st_size
