@@ -26,8 +26,9 @@ tqdm
 **Option 1:** 
 ```
 # Download and build the database
+# Default: site-packages/kegg_pathway_profiler/data/database.pkl.gz
 build-pathway-database.py \
-    -d data/database.pkl.gz \ # Default: site-packages/kegg_pathway_profiler/data/database.pkl.gz
+    -d data/database.pkl.gz \ 
     --download \
 ```
 
