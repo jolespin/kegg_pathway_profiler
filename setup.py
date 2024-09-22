@@ -37,13 +37,11 @@ setup(
     # package_data={
     #     'kegg_pathway_profiler': ['data/database.pkl.gz'],  # Specify the data file to include
     # },
-    install_requires=[
-    ],
+    install_requires=requirements,
     scripts=[
         "bin/profile-pathway-coverage.py",
         "bin/build-pathway-database.py",
         "bin/download-kegg-pathways.sh",
     ],
-    requirements=requirements,
     python_requires='>=3.6',
 )
