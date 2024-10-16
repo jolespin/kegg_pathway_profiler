@@ -4,7 +4,7 @@ from scipy.stats import false_discovery_control, hypergeom #, fisher_exact,nchyp
 import pandas as pd
 from tqdm import tqdm
 
-from .utils import check_argument_choice
+from pyexeggutor import check_argument_choice
 from .pathways import (
     update_graph_edge_weights_with_detected_kos,
     find_paths_in_pathway_graph,

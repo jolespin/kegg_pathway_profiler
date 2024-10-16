@@ -6,21 +6,12 @@ from datetime import datetime
 # import pandas as pd 
 from tqdm import tqdm
 
-__program__ = os.path.split(sys.argv[0])[-1]
-
-from kegg_pathway_profiler.utils import (
+from pyexeggutor import (
     open_file_reader,
     open_file_writer,
-#     read_pickle, 
     write_pickle, 
-#     read_kos,
     build_logger,
-#     reset_logger,
-#     # format_duration,
-#     # format_header,
     format_bytes,
-#     # get_directory_tree,
-    # get_directory_size,
 )
 
 from kegg_pathway_profiler.pathways import (
@@ -28,6 +19,8 @@ from kegg_pathway_profiler.pathways import (
     # pathway_coverage_wrapper,
     Pathway,
 )
+
+__program__ = os.path.split(sys.argv[0])[-1]
 
 os.makedirs(resource_files('kegg_pathway_profiler').joinpath('data'), exist_ok=True)
 DEFAULT_DATABASE = str(resource_files('kegg_pathway_profiler').joinpath('data/database.pkl.gz'))
@@ -70,7 +63,7 @@ def main(args=None):
     
     parser_download = parser.add_argument_group('Download arguments')
     parser_download.add_argument("--download", action="store_true",  help = "Download directly from http://rest.kegg.jp/")
-    parser_download.add_argument("--intermediate_directory", default="auto", help = "Write the intermediate files from http://rest.kegg.jp/ to a directory.  If 'auto' then download to the directory that contains --database called `pathway_data`.")
+    parser_download.add_argument("--intermediate_directory", default="auto", help = "Write the intermediate files from http://rest.kegg.jp/ to a directory.  If 'auto' then download to the directory that contains --database in a subdirectory called `pathway_data`.")
     parser_download.add_argument("--no_intermediate_files", action="store_true",  help = "Don't write intermediate files")
 
     # Options

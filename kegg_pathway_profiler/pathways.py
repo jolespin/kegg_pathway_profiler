@@ -2,11 +2,13 @@
 # from dataclasses import dataclass
 import networkx as nx
 from tqdm import tqdm
-
-from kegg_pathway_profiler.utils import (
-    read_kos,
+from pyexeggutor import (
     check_argument_choice,
     format_header,
+)
+from kegg_pathway_profiler.utils import (
+    read_kos,
+
 )
 from kegg_pathway_profiler.parse import (
     parse_expression,

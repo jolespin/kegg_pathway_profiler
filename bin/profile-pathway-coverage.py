@@ -5,24 +5,24 @@ from collections import defaultdict
 import pandas as pd 
 from tqdm import tqdm
 
-__program__ = os.path.split(sys.argv[0])[-1]
-
-from kegg_pathway_profiler.utils import (
+from pyexeggutor import (
     read_pickle, 
     write_pickle, 
-    read_kos,
     build_logger,
     reset_logger,
-    # format_duration,
-    # format_header,
     format_bytes,
-    # get_directory_tree,
     get_directory_size,
+)
+
+from kegg_pathway_profiler.utils import (
+    read_kos,
 )
 
 from kegg_pathway_profiler.pathways import (
     pathway_coverage_wrapper,
 )
+
+__program__ = os.path.split(sys.argv[0])[-1]
 
 DEFAULT_DATABASE = resource_files('kegg_pathway_profiler').joinpath('data/database.pkl.gz')
 
