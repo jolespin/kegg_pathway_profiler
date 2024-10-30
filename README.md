@@ -17,6 +17,7 @@ numpy>=1.9
 scipy>=1.11
 pandas>=1.0
 tqdm
+pyexeggutor>=2024.10.16
 ```
 
 ## CLI Usage:
