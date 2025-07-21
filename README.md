@@ -155,8 +155,6 @@ I/O arguments:
                         path/to/database.pkl[.gz] [Default: /Users/jolespin/miniconda3/envs/kegg_pathway_profiler_env/lib/python3.10/site-packages/kegg_pathway_profiler/data/database.pkl.gz]
   --index_name INDEX_NAME
                         Index name for coverage table (e.g., id_genome, id_genome_cluster, id_contig) [Default: id_genome]
-
-Copyright 2024 New Atlantis Labs (jolespin@newatlantis.io)
 ```
 
 ### build-pathway-database.py
@@ -189,8 +187,6 @@ Download arguments:
                         Write the intermediate files from http://rest.kegg.jp/ to a directory.  If 'auto' then download to the directory that contains --database called `pathway_data`.
   --no_intermediate_files
                         Don't write intermediate files
-
-Copyright 2024 New Atlantis Labs (jolespin@newatlantis.io)
 ```
 
 
