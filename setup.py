@@ -21,8 +21,6 @@ with open(path.join(script_directory, 'requirements.txt')) as f:
             if not line.startswith("#"):
                 requirements.append(line)
 
-from setuptools import setup, find_packages
-
 setup(
     name='kegg_pathway_profiler',
     version=version,

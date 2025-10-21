@@ -45,7 +45,7 @@ def main(args=None):
     description = """
     Running: {} v{} via Python v{} | {}""".format(__program__, sys.version.split(" ")[0], python_executable, script_filename)
     usage = f"{__program__} "
-    epilog = "KEGG Pathway Profiler"
+    epilog = "https://github.com/jolespin/kegg_pathway_profiler"
 
     # Parser
     parser = argparse.ArgumentParser(description=description, usage=usage, epilog=epilog, formatter_class=argparse.RawTextHelpFormatter)
