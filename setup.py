@@ -29,7 +29,7 @@ setup(
     long_description_content_type='text/markdown',
     author='Josh L. Espinoza',
     url='https://github.com/jolespin/kegg_pathway_profiler',
-    license='GPLv3',
+    license='Apache 2.0',
     packages=find_packages(),  # Automatically find packages in the project
     include_package_data=True,  # Include package data as defined in MANIFEST.in
     # package_data={
@@ -39,7 +39,9 @@ setup(
     scripts=[
         "bin/profile-pathway-coverage.py",
         "bin/build-pathway-database.py",
+        "bin/get-kos-from-pykofamsearch.py",
         "bin/download-kegg-pathways.sh",
+
     ],
     python_requires='>=3.6',
 )
