@@ -77,66 +77,66 @@ def main(args=None):
                             
 
         # Read PyKOfamSearch
-        if opts.identifier_mapping:
-            genome_to_kos = defaultdict(set)
-            if opts.identifier_mapping_format > 1:
-                if opts.reformatted:
-                    for line in tqdm(f_in):
-                        line = line.strip()
-                        if line:
-                            id_protein, number_of_hits, ids, *_ = line.split("\t")
-                            ids = eval(ids)
-                            id_genome = protein_to_genome[id_protein]
-                            genome_to_kos[id_genome] |= set(ids)
-                else:
-                    for line in tqdm(f_in):
-                        line = line.strip()
-                        if line:
-                            id_protein, id_ko, *_ = line.split("\t")
-                            id_genome = protein_to_genome[id_protein]
-                            genome_to_kos[id_genome].add(id_ko)
-            else:
-                if opts.reformatted:
-                    for line in tqdm(f_in):
-                        line = line.strip()
-                        if line:
-                            id_protein, number_of_hits, ids, *_ = line.split("\t")
-                            ids = eval(ids)
-                            id_genome = opts.identifier_mapping
-                            genome_to_kos[id_genome] |= set(ids)
-                else:
-                    for line in tqdm(f_in):
-                        line = line.strip()
-                        if line:
-                            id_protein, id_ko, *_ = line.split("\t")
-                            id_genome = opts.identifier_mapping
-                            genome_to_kos[id_genome].add(id_ko)
-                            
-            # Output
-            for id_genome, kos in tqdm(genome_to_kos.items()):
-                for id_ko in kos:
-                    print(id_genome, id_ko, sep="\t", file=f_out)
-                
-        else:
-            all_ids = set()
+        genome_to_kos = defaultdict(set)
+        if opts.identifier_mapping_format > 1:
             if opts.reformatted:
                 for line in tqdm(f_in):
                     line = line.strip()
                     if line:
                         id_protein, number_of_hits, ids, *_ = line.split("\t")
                         ids = eval(ids)
-                        all_ids |= set(ids)
+                        id_genome = protein_to_genome[id_protein]
+                        genome_to_kos[id_genome] |= set(ids)
             else:
                 for line in tqdm(f_in):
                     line = line.strip()
                     if line:
                         id_protein, id_ko, *_ = line.split("\t")
-                        all_ids.add(id_ko)
-            all_ids = sorted(all_ids)
-        
-            # Output
-            for id_ko in tqdm(all_ids):
-                print(id_ko, file=f_out)
+                        id_genome = protein_to_genome[id_protein]
+                        genome_to_kos[id_genome].add(id_ko)
+        else:
+            if opts.reformatted:
+                for line in tqdm(f_in):
+                    line = line.strip()
+                    if line:
+                        id_protein, number_of_hits, ids, *_ = line.split("\t")
+                        ids = eval(ids)
+                        id_genome = opts.identifier_mapping
+                        genome_to_kos[id_genome] |= set(ids)
+            else:
+                for line in tqdm(f_in):
+                    line = line.strip()
+                    if line:
+                        id_protein, id_ko, *_ = line.split("\t")
+                        id_genome = opts.identifier_mapping
+                        genome_to_kos[id_genome].add(id_ko)
+                        
+        # Output
+        for id_genome, kos in tqdm(genome_to_kos.items()):
+            for id_ko in kos:
+                print(id_genome, id_ko, sep="\t", file=f_out)
+                
+    else:
+        # No identifier mapping - just extract all unique KO IDs
+        all_ids = set()
+        if opts.reformatted:
+            for line in tqdm(f_in):
+                line = line.strip()
+                if line:
+                    id_protein, number_of_hits, ids, *_ = line.split("\t")
+                    ids = eval(ids)
+                    all_ids |= set(ids)
+        else:
+            for line in tqdm(f_in):
+                line = line.strip()
+                if line:
+                    id_protein, id_ko, *_ = line.split("\t")
+                    all_ids.add(id_ko)
+        all_ids = sorted(all_ids)
+    
+        # Output
+        for id_ko in tqdm(all_ids):
+            print(id_ko, file=f_out)
     
     # Close
     if f_in != sys.stdin:
