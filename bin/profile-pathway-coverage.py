@@ -2,6 +2,8 @@
 import sys,os, argparse, warnings, subprocess
 from importlib.resources import files as resource_files
 from collections import defaultdict
+from concurrent.futures import ProcessPoolExecutor, as_completed
+from functools import partial
 import pandas as pd 
 from tqdm import tqdm
 
@@ -22,9 +24,27 @@ from kegg_pathway_profiler.pathways import (
     pathway_coverage_wrapper,
 )
 
+
 __program__ = os.path.split(sys.argv[0])[-1]
 
 DEFAULT_DATABASE = resource_files('kegg_pathway_profiler').joinpath('data/database.pkl.gz')
+
+# Wrapper function for parallel execution
+def process_genome(id_genome, genome_kos, database):
+    pathway_to_results = pathway_coverage_wrapper(
+        evaluation_kos=genome_kos,
+        database=database,
+        progressbar_description=f"Calculating pathway coverage: {id_genome}",
+        progressbar=False,
+    )
+    
+    # Extract coverage data
+    coverage_data = {
+        id_pathway: results["coverage"] 
+        for id_pathway, results in pathway_to_results.items()
+    }
+    
+    return id_genome, pathway_to_results, coverage_data
 
 def main(args=None):
     # Options
@@ -52,8 +72,8 @@ def main(args=None):
     parser_io.add_argument("--index_name", type=str, default="id_genome", help = f"Index name for coverage table (e.g., id_genome, id_genome_cluster, id_contig) [Default: id_genome]")
 
     # Utilities
-    # parser_utility = parser.add_argument_group('Utility arguments')
-    # parser_utility.add_argument("-p","--n_jobs", type=int, default=1,  help = "Number of threads to use.  Use -1 for all available. [Default: 1]")
+    parser_utility = parser.add_argument_group('Utility arguments')
+    parser_utility.add_argument("-p","--n_jobs", type=int, default=1,  help = "Number of threads to use.  Use -1 for all available. [Default: 1]")
 
     # Pathways
     # parser_pathways = parser.add_argument_group('Pathways arguments')
@@ -79,6 +99,13 @@ def main(args=None):
         if opts.name is None:
             raise ValueError("If --kos is stdin then --name must be provided")        
         
+    # Threads
+    if opts.n_jobs == -1:
+        logger.info(f"Determining available number of threads")
+        from multiprocessing import cpu_count
+        opts.n_jobs = cpu_count()
+    logger.info(f"Using {opts.n_jobs} threads")
+
     # Make directory
     logger.info(f"Creating output directory: {opts.output_directory})")
     os.makedirs(opts.output_directory, exist_ok=True)
@@ -99,28 +126,29 @@ def main(args=None):
 
     # Coverage table
     logger.info(f"Calculating pathway coverage")
+ 
+    # Parallel execution
+    output_data = {}
     coverage_table = defaultdict(dict)
-    output_data = defaultdict(lambda: defaultdict(dict))
-    
-    # Calculate pathway coverage for all genomes
-    for id_genome, evaluation_kos in genome_to_kos.items():
-        # Calculate pathway coverage for all pathways based on evaluation KO set
-        pathway_to_results = pathway_coverage_wrapper(
-            evaluation_kos=evaluation_kos,
-            database=database,
-            progressbar_description=f"Calculating pathway coverage: {id_genome}",
-        )
-        # Complete output
-        output_data[id_genome] = pathway_to_results
+
+    with ProcessPoolExecutor(max_workers=opts.n_jobs) as executor:
+        # Submit all jobs
+        futures = {
+            executor.submit(process_genome, id_genome, genome_kos, database): id_genome
+            for id_genome, genome_kos in genome_to_kos.items()
+        }
         
-        # Coverage
-        for id_pathway, results in pathway_to_results.items():
-            coverage_table[id_genome][id_pathway] = results["coverage"]
-    
+        # Collect results with progress bar
+        for future in tqdm(as_completed(futures), total=len(futures), desc="Processing genomes"):
+            id_genome, pathway_to_results, coverage_data = future.result()
+            output_data[id_genome] = pathway_to_results
+            coverage_table[id_genome] = coverage_data
+
     # Coverage table
     df_coverage_table = pd.DataFrame(coverage_table).T.fillna(0.0)
     df_coverage_table = df_coverage_table.loc[:,sorted(df_coverage_table.columns, key=lambda id_pathway:int(id_pathway[1:]))]
     df_coverage_table.index.name = opts.index_name
+
     output_filepath = os.path.join(opts.output_directory, "pathway_coverage.tsv.gz")
     logger.info(f"Writing pathway coverage table: {output_filepath}")
     df_coverage_table.to_csv(output_filepath, sep="\t")

@@ -291,6 +291,7 @@ def pathway_coverage_wrapper(
     evaluation_kos: set,
     database: dict,
     progressbar_description: str = "Calculating pathway coverage:",
+    progressbar = False,
 ) -> dict:
     """
     Calculates the coverage of pathways in a KEGG database based on a set of evaluation KOs (KEGG Orthology identifiers).
@@ -342,7 +343,11 @@ def pathway_coverage_wrapper(
     pathway_to_results = dict()  # Dictionary to store coverage results for each pathway
     
     # Iterate over each pathway in the database
-    for id_pathway in tqdm(database, desc=progressbar_description, unit=" Pathways"):
+    if progressbar:
+        iterable = tqdm(database, desc=progressbar_description, unit=" Pathways")
+    else:
+        iterable = database
+    for id_pathway in iterable:
         # Extract the graph, KO-to-nodes mapping, and optional KOs for the current pathway
         graph = database[id_pathway]["graph"]
         ko_to_nodes = database[id_pathway]["ko_to_nodes"]

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-__version__ = "2025.10.21"
+__version__ = "2025.12.4"
 
-from .utils import *
-from .parse import *
-from .enrichment import *
-from .pathways import *
+from . import utils
+from . import parse
+from . import enrichment
+from . import pathways

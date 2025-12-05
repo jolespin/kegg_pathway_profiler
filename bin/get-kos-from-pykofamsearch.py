@@ -29,7 +29,7 @@ def main(args=None):
     # Pipeline
     parser.add_argument("-i", "--input", type=str, default="stdin", help = "path/to/pykofamsearch_output.tsv")
     parser.add_argument("-o", "--output", type=str, default="stdout", help = "Either 1) list of KOs; or 2) [id_genome]<tab>[id_ko] if --name/--identifier_mapping is provided. No header.")
-    parser.add_argument("-m", "--identifier_mapping", type=str, help = "Identifier mapping [id_protein]<tab>[id_genome], No header. Cannot be used with --name.")
+    parser.add_argument("-m", "--identifier_mapping", type=str, help = "Identifier mapping [id_protein]<tab>[id_genome] or [id_protein]<tab>[id_contig]<tab>[id_genome], No header. Cannot be used with --name.")
     parser.add_argument("-f", "--identifier_mapping_format", type=int,  choices={1,2,3}, help = "1: --identifier_mapping <id_genome>, 2: path/to/tsv [id_protein]<tab>[id_genome], or 3: path/to/tsv [id_protein]<tab>[id_contig]<tab>[id_genome]")
     parser.add_argument("-r", "--reformatted", action="store_true", help = "PyKOfamSearch output is reformatted")
     
