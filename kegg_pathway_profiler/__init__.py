@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-__version__ = "2025.12.4"
+__version__ = "2025.12.5"
 
 from . import utils
 from . import parse

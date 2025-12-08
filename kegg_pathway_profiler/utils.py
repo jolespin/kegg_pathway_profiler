@@ -1,5 +1,7 @@
 #!/usr/bin/env python
+from typing import Union, Set
 from collections import defaultdict
+from tqdm import tqdm
 from pyexeggutor import open_file_reader
 
 def read_kos(filepath: str, name: str):

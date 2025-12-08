@@ -1,5 +1,5 @@
 from setuptools import setup, find_packages
-
+import glob
 from os import path
 
 script_directory = path.abspath(path.dirname(__file__))
@@ -21,6 +21,10 @@ with open(path.join(script_directory, 'requirements.txt')) as f:
             if not line.startswith("#"):
                 requirements.append(line)
 
+python_scripts = glob.glob("bin/*.py")
+shell_scripts = glob.glob("bin/*.sh")
+scripts = python_scripts + shell_scripts
+
 setup(
     name='kegg_pathway_profiler',
     version=version,
@@ -36,12 +40,6 @@ setup(
     #     'kegg_pathway_profiler': ['data/database.pkl.gz'],  # Specify the data file to include
     # },
     install_requires=requirements,
-    scripts=[
-        "bin/profile-pathway-coverage.py",
-        "bin/build-pathway-database.py",
-        "bin/get-kos-from-pykofamsearch.py",
-        "bin/download-kegg-pathways.sh",
-
-    ],
+    scripts=scripts,
     python_requires='>=3.6',
 )

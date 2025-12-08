@@ -1,4 +1,5 @@
 # Daily Log: 
+* [2025.12.5] - Added `parse_attribute_from_gff`
 * [2025.12.4] - Added parallelization to `profile-pathway-coverage.py`
 * [2025.12.4] - Changed the way `__init__.py` loads in submodules
 * [2025.12.4] - Added optional `progressbar` to `pathway_coverage_wrapper`
