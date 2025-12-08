@@ -128,22 +128,25 @@ df_enrichment = kpp.enrichment.unweighted_pathway_enrichment_wrapper(
 
 ### profile-pathway-coverage.py
 ```
-usage: profile-pathway-coverage.py
+usage: profile-pathway-coverage.py 
 
-    Running: profile-pathway-coverage.py v3.10.14 via Python v/Users/jolespin/miniconda3/envs/kegg_pathway_profiler_env/bin/python3.10 | profile-pathway-coverage.py
+    Running: profile-pathway-coverage.py v3.14.0 via Python v/Users/josh/miniforge3/envs/kegg/bin/python3.14 | profile-pathway-coverage.py
 
 options:
   -h, --help            show this help message and exit
 
 I/O arguments:
-  -i KOS, --kos KOS     path/to/kos.list[.gz].  Can either be 1 KO per line or a tab-separated table with the following structure: [id_genome]<tab>[id_ko], No header.
-  -n NAME, --name NAME  Name of genome. [Default: Filename for --kos]
-  -o OUTPUT_DIRECTORY, --output_directory OUTPUT_DIRECTORY
+  -i, --kos KOS         path/to/kos.list[.gz].  Can either be 1 KO per line or a tab-separated table with the following structure: [id_genome]<tab>[id_ko], No header.
+  -n, --name NAME       Name of genome. [Default: Filename for --kos]
+  -o, --output_directory OUTPUT_DIRECTORY
                         path/to/output_directory/ (e.g., kegg_pathway_profiler_output/]
-  -d DATABASE, --database DATABASE
-                        path/to/database.pkl[.gz] [Default: /Users/jolespin/miniconda3/envs/kegg_pathway_profiler_env/lib/python3.10/site-packages/kegg_pathway_profiler/data/database.pkl.gz]
+  -d, --database DATABASE
+                        path/to/database.pkl[.gz] [Default: /Users/josh/miniforge3/envs/kegg/lib/python3.14/site-packages/kegg_pathway_profiler/data/database.pkl.gz]
   --index_name INDEX_NAME
                         Index name for coverage table (e.g., id_genome, id_genome_cluster, id_contig) [Default: id_genome]
+
+Utility arguments:
+  -p, --n_jobs N_JOBS   Number of threads to use.  Use -1 for all available. [Default: 1]
 ```
 
 ### build-pathway-database.py
