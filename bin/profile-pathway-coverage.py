@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# bin/profile-pathway-coverage.py
 import sys,os, argparse, warnings, subprocess
 from importlib.resources import files as resource_files
 from collections import defaultdict
@@ -130,6 +131,7 @@ def main(args=None):
     # Parallel execution
     output_data = {}
     coverage_table = defaultdict(dict)
+    step_coverage_data = defaultdict(dict)  # New: collect step coverage data
 
     with ProcessPoolExecutor(max_workers=opts.n_jobs) as executor:
         # Submit all jobs
@@ -143,6 +145,12 @@ def main(args=None):
             id_genome, pathway_to_results, coverage_data = future.result()
             output_data[id_genome] = pathway_to_results
             coverage_table[id_genome] = coverage_data
+            
+            # Collect step coverage data
+            for id_pathway, results in pathway_to_results.items():
+                for step, value in results["step_coverage"].items():
+                    step_label = f"{step[0]}-{step[1]}"
+                    step_coverage_data[id_genome][(id_pathway, step_label)] = value
 
     # Coverage table
     df_coverage_table = pd.DataFrame(coverage_table).T.fillna(0.0)
@@ -152,6 +160,24 @@ def main(args=None):
     output_filepath = os.path.join(opts.output_directory, "pathway_coverage.tsv.gz")
     logger.info(f"Writing pathway coverage table: {output_filepath}")
     df_coverage_table.to_csv(output_filepath, sep="\t")
+    
+    # Step coverage table (new)
+    df_step_coverage = pd.DataFrame(step_coverage_data).T.fillna(0).astype(int)
+    
+    # Create MultiIndex columns
+    if not df_step_coverage.empty:
+        df_step_coverage.columns = pd.MultiIndex.from_tuples(
+            df_step_coverage.columns,
+            names=["id_pathway", "step"]
+        )
+        
+        # Sort columns by pathway ID then step
+        df_step_coverage = df_step_coverage.sort_index(axis=1, level=0, key=lambda x: x.str[1:].astype(int))
+        df_step_coverage.index.name = opts.index_name
+        
+        output_filepath = os.path.join(opts.output_directory, "step_coverage.tsv.gz")
+        logger.info(f"Writing step coverage table: {output_filepath}")
+        df_step_coverage.to_csv(output_filepath, sep="\t")
     
     # Pathway outputs
     output_filepath = os.path.join(opts.output_directory, "pathway_output.pkl.gz")

@@ -1,4 +1,5 @@
 # Daily Log: 
+* [2025.12.18] - Added step-level binary coverage tracking and `step_coverage.tsv.gz` output with MultiIndex columns (pathway, step)
 * [2025.12.5] - Added `parse_attribute_from_gff`
 * [2025.12.4] - Added parallelization to `profile-pathway-coverage.py`
 * [2025.12.4] - Changed the way `__init__.py` loads in submodules
