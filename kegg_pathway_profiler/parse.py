@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+# kegg_pathway_profiler/parse.py
+
 import networkx as nx
 
 

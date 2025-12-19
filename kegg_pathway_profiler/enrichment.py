@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# kegg_pathway_profiler/enrichment.py
+
 import warnings
 from collections import defaultdict, OrderedDict
 from scipy.stats import false_discovery_control, hypergeom #, fisher_exact,nchypergeom_wallenius 

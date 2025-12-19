@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+# kegg_pathway_profiler/utils.py
+
 from typing import Union, Set
 from collections import defaultdict
 from tqdm import tqdm

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-# from dataclasses import dataclass
+# kegg_pathway_profiler/pathways.py
+
 import networkx as nx
 from tqdm import tqdm
 from pyexeggutor import (
@@ -14,6 +15,48 @@ from kegg_pathway_profiler.parse import (
     parse_expression,
 )
 
+def get_pathway_steps(ko_to_nodes: dict) -> list:
+    """
+    Extract unique steps (node pair transitions) from ko_to_nodes mapping.
+    
+    Args:
+        ko_to_nodes: Dictionary mapping KO identifiers to lists of [start, end] node pairs
+        
+    Returns:
+        Sorted list of unique steps as tuples (start_node, end_node)
+    """
+    steps = set()
+    for ko, node_pairs in ko_to_nodes.items():
+        for node_pair in node_pairs:
+            steps.add(tuple(node_pair))
+    return sorted(steps)
+
+
+def get_step_coverage(evaluation_kos: set, ko_to_nodes: dict) -> dict:
+    """
+    Calculate binary coverage (presence/absence) for each step in the pathway.
+    
+    Args:
+        evaluation_kos: Set of KO identifiers present in the genome
+        ko_to_nodes: Dictionary mapping KO identifiers to lists of [start, end] node pairs
+        
+    Returns:
+        Dictionary mapping step tuples to binary values (1 if covered, 0 if not)
+    """
+    steps = get_pathway_steps(ko_to_nodes)
+    step_coverage = {}
+    
+    for step in steps:
+        covered = False
+        for ko in evaluation_kos:
+            if ko in ko_to_nodes:
+                # Check if this KO covers the current step
+                if list(step) in ko_to_nodes[ko]:
+                    covered = True
+                    break
+        step_coverage[step] = 1 if covered else 0
+    
+    return step_coverage
 
 def update_graph_edge_weights_with_detected_kos(
     evaluation_kos: set, 
@@ -222,42 +265,8 @@ def get_pathway_coverage(
 ):
     """
     Calculate the coverage of a pathway graph based on a given set of KOs (KEGG Orthology terms).
-
-    This function evaluates the extent to which a set of KOs is represented in a pathway graph. It modifies 
-    the graph by updating edge weights based on the presence of KOs in the `evaluation_kos` set. The coverage 
-    is determined by finding the most complete path in the graph and calculating the proportion of KOs that 
-    are covered.
-
-    Parameters
-    ----------
-    evaluation_kos : set
-        A set of KOs to evaluate against the pathway graph.
     
-    graph : nx.MultiDiGraph
-        A directed, acyclic graph representing the pathway. Nodes represent biological components, and edges 
-        represent interactions or dependencies, with weights indicating the strength or presence of these 
-        connections.
-    
-    ko_to_nodes : dict
-        A dictionary mapping each KO to its corresponding edges in the graph. Each KO is associated with a list 
-        of tuples representing the start and end nodes of the edges it influences.
-    
-    optional_kos : set
-        A set of KOs that are optional and not required for full pathway coverage.
-
-    Returns
-    -------
-    dict
-        A dictionary containing the following keys:
-        - 'coverage': float, the proportion of the pathway covered by the given KOs (0 to 1 scale).
-        - 'number_of_best_paths': int, the number of paths with the highest coverage.
-        - 'required_kos_in_path': set, KOs from `evaluation_kos` that are present in the most complete path.
-        - 'required_kos_missing_in_path': set, KOs from `evaluation_kos` that are missing from the most complete path.
-
-    Notes
-    -----
-    - The function modifies a copy of the input graph, leaving the original graph unchanged.
-    - The function assumes that the graph is directed and acyclic, suitable for pathway analysis.
+    [Keep existing docstring...]
     """
     # Updates the edge weights in the given directed graph based on the presence of KOs in the evaluation set.
     graph_weighted = update_graph_edge_weights_with_detected_kos(evaluation_kos, graph, ko_to_nodes)
@@ -278,6 +287,9 @@ def get_pathway_coverage(
         required_kos_missing_in_path = kos_missing_in_path - optional_kos
         required_kos_in_path = kos_in_path & evaluation_kos
 
+    # Calculate step-level coverage
+    step_coverage = get_step_coverage(evaluation_kos, ko_to_nodes)
+
     # Return a dictionary containing coverage information
     return dict(
         coverage=coverage,
@@ -285,6 +297,7 @@ def get_pathway_coverage(
         most_complete_path=path_to_ordered_kos[most_complete_path],
         required_kos_in_path=required_kos_in_path,
         required_kos_missing_in_path=required_kos_missing_in_path,
+        step_coverage=step_coverage,  # New field
     )
 
 def pathway_coverage_wrapper(
