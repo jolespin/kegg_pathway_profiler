@@ -184,7 +184,7 @@ Download arguments:
 Python dictionary pickle where keys are KEGG modules and values are a dictionary of values.  
 
 ### Preview:
-```json
+```
 {
     'M00001': {
         'name': 'Glycolysis (Embden-Meyerhof pathway), glucose => pyruvate',
