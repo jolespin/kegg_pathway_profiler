@@ -30,22 +30,38 @@ __program__ = os.path.split(sys.argv[0])[-1]
 
 DEFAULT_DATABASE = resource_files('kegg_pathway_profiler').joinpath('data/database.pkl.gz')
 
+_worker_database = None
+_worker_serialize_output = True
+
+def _init_worker(database, serialize_output):
+    global _worker_database, _worker_serialize_output
+    _worker_database = database
+    _worker_serialize_output = serialize_output
+
 # Wrapper function for parallel execution
-def process_genome(id_genome, genome_kos, database):
+def process_genome(id_genome, genome_kos):
     pathway_to_results = pathway_coverage_wrapper(
         evaluation_kos=genome_kos,
-        database=database,
+        database=_worker_database,
         progressbar_description=f"Calculating pathway coverage: {id_genome}",
         progressbar=False,
     )
-    
-    # Extract coverage data
-    coverage_data = {
-        id_pathway: results["coverage"] 
-        for id_pathway, results in pathway_to_results.items()
-    }
-    
-    return id_genome, pathway_to_results, coverage_data
+
+    coverage_data = {}
+    step_coverage_data = {}
+    for id_pathway, results in pathway_to_results.items():
+        coverage_data[id_pathway] = results["coverage"]
+        step_coverage_data[id_pathway] = {
+            f"{step[0]}-{step[1]}": value
+            for step, value in results["step_coverage"].items()
+        }
+
+    return (
+        id_genome,
+        pathway_to_results if _worker_serialize_output else None,
+        coverage_data,
+        step_coverage_data,
+    )
 
 def main(args=None):
     # Options
@@ -75,6 +91,7 @@ def main(args=None):
     # Utilities
     parser_utility = parser.add_argument_group('Utility arguments')
     parser_utility.add_argument("-p","--n_jobs", type=int, default=1,  help = "Number of threads to use.  Use -1 for all available. [Default: 1]")
+    parser_utility.add_argument("--no_serialized_output", action="store_true", help = "Skip writing pathway_output.pkl.gz to reduce memory usage for large runs")
 
     # Pathways
     # parser_pathways = parser.add_argument_group('Pathways arguments')
@@ -129,27 +146,28 @@ def main(args=None):
     logger.info(f"Calculating pathway coverage")
  
     # Parallel execution
-    output_data = {}
+    serialize_output = not opts.no_serialized_output
+    output_data = {} if serialize_output else None
     coverage_table = defaultdict(dict)
-    step_coverage_data = defaultdict(dict)  # New: collect step coverage data
+    step_coverage_data = defaultdict(dict)
 
-    with ProcessPoolExecutor(max_workers=opts.n_jobs) as executor:
+    with ProcessPoolExecutor(max_workers=opts.n_jobs, initializer=_init_worker, initargs=(database, serialize_output)) as executor:
         # Submit all jobs
         futures = {
-            executor.submit(process_genome, id_genome, genome_kos, database): id_genome
+            executor.submit(process_genome, id_genome, genome_kos): id_genome
             for id_genome, genome_kos in genome_to_kos.items()
         }
-        
+
         # Collect results with progress bar
         for future in tqdm(as_completed(futures), total=len(futures), desc="Processing genomes"):
-            id_genome, pathway_to_results, coverage_data = future.result()
-            output_data[id_genome] = pathway_to_results
+            id_genome, pathway_to_results, coverage_data, genome_step_coverage = future.result()
+            if serialize_output:
+                output_data[id_genome] = pathway_to_results
             coverage_table[id_genome] = coverage_data
-            
+
             # Collect step coverage data
-            for id_pathway, results in pathway_to_results.items():
-                for step, value in results["step_coverage"].items():
-                    step_label = f"{step[0]}-{step[1]}"
+            for id_pathway, steps in genome_step_coverage.items():
+                for step_label, value in steps.items():
                     step_coverage_data[id_genome][(id_pathway, step_label)] = value
 
     # Coverage table
@@ -180,9 +198,12 @@ def main(args=None):
         df_step_coverage.to_csv(output_filepath, sep="\t")
     
     # Pathway outputs
-    output_filepath = os.path.join(opts.output_directory, "pathway_output.pkl.gz")
-    logger.info(f"Writing pathway output pickle: {output_filepath}")
-    write_pickle(dict(output_data), output_filepath)
+    if serialize_output:
+        output_filepath = os.path.join(opts.output_directory, "pathway_output.pkl.gz")
+        logger.info(f"Writing pathway output pickle: {output_filepath}")
+        write_pickle(dict(output_data), output_filepath)
+    else:
+        logger.info("Skipping pathway_output.pkl.gz (--no_serialized_output)")
     
 if __name__ == "__main__":
     main()

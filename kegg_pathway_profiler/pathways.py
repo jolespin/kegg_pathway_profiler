@@ -44,19 +44,14 @@ def get_step_coverage(evaluation_kos: set, ko_to_nodes: dict) -> dict:
         Dictionary mapping step tuples to binary values (1 if covered, 0 if not)
     """
     steps = get_pathway_steps(ko_to_nodes)
-    step_coverage = {}
-    
-    for step in steps:
-        covered = False
-        for ko in evaluation_kos:
-            if ko in ko_to_nodes:
-                # Check if this KO covers the current step
-                if list(step) in ko_to_nodes[ko]:
-                    covered = True
-                    break
-        step_coverage[step] = 1 if covered else 0
-    
-    return step_coverage
+
+    covered_steps = set()
+    for ko in evaluation_kos:
+        if ko in ko_to_nodes:
+            for node_pair in ko_to_nodes[ko]:
+                covered_steps.add(tuple(node_pair))
+
+    return {step: 1 if step in covered_steps else 0 for step in steps}
 
 def update_graph_edge_weights_with_detected_kos(
     evaluation_kos: set, 
