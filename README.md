@@ -289,4 +289,11 @@ Python dictionary pickle where keys are KEGG modules and values are a dictionary
 ```
 
 ## Acknowledgements: 
-[Ekaterina Sakharova](https://github.com/KateSakharova) the developer for the original implementation [kegg-pathways-completeness-tool](https://github.com/EBI-Metagenomics/kegg-pathways-completeness-tool).
+Thank you to [Ekaterina Sakharova](https://github.com/KateSakharova) the developer for the original implementation [kegg-pathways-completeness-tool](https://github.com/EBI-Metagenomics/kegg-pathways-completeness-tool)
+
+## Citations:
+If you use this tool, please cite the original [MGnify](http://dx.doi.org/10.1093/nar/gkac1080) work:
+>Richardson L, Allen B, Baldi G, Beracochea M, Bileschi ML, Burdett T, et al. 
+MGnify: the microbiome sequence data analysis resource in 2023. 
+Vol. 51, Nucleic Acids Research. Oxford University Press (OUP); 2022. p. D753–9. 
+Available from: http://dx.doi.org/10.1093/nar/gkac1080.
