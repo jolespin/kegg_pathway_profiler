@@ -13,7 +13,19 @@ pip install kegg_pathway_profiler
 
 ### Fetching and building the database:
 
-**Option 1:** 
+**Option 1 (EBI Repository, recommended):**
+```
+# From latest EBI release
+build-pathway-database.py -d data/database.pkl.gz --ebi latest
+
+# From a specific EBI release
+build-pathway-database.py -d data/database.pkl.gz --ebi 1.4.3
+
+# From a branch
+build-pathway-database.py -d data/database.pkl.gz --ebi branch:master
+```
+
+**Option 2:** 
 ```
 # Download and build the database
 # Default: site-packages/kegg_pathway_profiler/data/database.pkl.gz
@@ -22,7 +34,7 @@ build-pathway-database.py \
     --download \
 ```
 
-**Option 2:**
+**Option 3:**
 ```
 # Fetch the database
 mkdir -p data/
@@ -173,10 +185,19 @@ Local arguments:
   -c PATHWAY_CLASSES, --pathway_classes PATHWAY_CLASSES
                         path/to/pathway_classes.tsv.  [id_pathway]<tab>[class], No header.
 
+EBI repository arguments (recommended):
+  --ebi EBI             Download from EBI kegg-pathways-completeness-tool GitHub repository (recommended).
+                        Accepts: 'latest' (latest release), a release tag (e.g., '1.4.3'),
+                        or 'branch:<name>' (e.g., 'branch:master').
+                        Examples: --ebi latest, --ebi 1.4.3, --ebi branch:master
+
 Download arguments:
   --download            Download directly from http://rest.kegg.jp/
+
+I/O arguments:
   --intermediate_directory INTERMEDIATE_DIRECTORY
-                        Write the intermediate files from http://rest.kegg.jp/ to a directory.  If 'auto' then download to the directory that contains --database called `pathway_data`.
+                        Write intermediate files to a directory.  If 'auto' then use the directory
+                        that contains --database in a subdirectory called `pathway_data`.
   --no_intermediate_files
                         Don't write intermediate files
 ```

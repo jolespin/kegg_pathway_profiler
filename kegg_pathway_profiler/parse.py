@@ -160,8 +160,12 @@ def parse_expression(graph: nx.MultiDiGraph, ko_to_nodes: dict, optional_kos: se
         ko_to_nodes.setdefault(missing_ko, []).append([start_node, end_node])
         return graph, ko_to_nodes, optional_kos
 
-    # Strip outer brackets and parse the expression by levels
-    expression = strip_outer_brackets(expression, get_bracket_levels(expression))
+    # Strip outer brackets (loop to handle redundant nesting like ((X,Y)))
+    while True:
+        stripped = strip_outer_brackets(expression, get_bracket_levels(expression))
+        if stripped == expression:
+            break
+        expression = stripped
     level_to_positions = parse_levels(expression)
     separator_order = order_separators(level_to_positions)
 
