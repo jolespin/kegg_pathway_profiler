@@ -1,4 +1,5 @@
 # Daily Log: 
+* [2026.7.14] - Added `--ebi` mode to `build-pathway-database.py` for building databases from the EBI kegg-pathways-completeness-tool GitHub repository (supports latest release, specific tags, and branches). Fixed parser bug in `parse.py` where redundant nested brackets (e.g., `((K01918,K13799))`) caused `IndexError` during expression parsing.
 * [2026.5.26] - Performance optimizations for large runs in `profile-pathway-coverage.py`: rewrote `get_step_coverage()` to use set-based lookups instead of nested list scans, added pool initializer to avoid re-serializing database per task, added `--no_serialized_output` flag to skip `pathway_output.pkl.gz` and reduce memory usage, and moved step coverage extraction into worker to avoid serializing full results back to main process when `--no_serialized_output` is set
 * [2025.12.18] - Added step-level binary coverage tracking and `step_coverage.tsv.gz` output with MultiIndex columns (pathway, step)
 * [2025.12.5] - Added `parse_attribute_from_gff`
