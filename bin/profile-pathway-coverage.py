@@ -2,11 +2,7 @@
 # bin/profile-pathway-coverage.py
 import sys,os, argparse, warnings, subprocess
 from importlib.resources import files as resource_files
-from collections import defaultdict
-from concurrent.futures import ProcessPoolExecutor, as_completed
-from functools import partial
-import pandas as pd 
-from tqdm import tqdm
+import pandas as pd
 
 from pyexeggutor import (
     read_pickle, 
@@ -21,47 +17,12 @@ from kegg_pathway_profiler.utils import (
     read_kos,
 )
 
-from kegg_pathway_profiler.pathways import (
-    pathway_coverage_wrapper,
-)
+from kegg_pathway_profiler.pathways import profile_pathway_coverage
 
 
 __program__ = os.path.split(sys.argv[0])[-1]
 
 DEFAULT_DATABASE = resource_files('kegg_pathway_profiler').joinpath('data/database.pkl.gz')
-
-_worker_database = None
-_worker_serialize_output = True
-
-def _init_worker(database, serialize_output):
-    global _worker_database, _worker_serialize_output
-    _worker_database = database
-    _worker_serialize_output = serialize_output
-
-# Wrapper function for parallel execution
-def process_genome(id_genome, genome_kos):
-    pathway_to_results = pathway_coverage_wrapper(
-        evaluation_kos=genome_kos,
-        database=_worker_database,
-        progressbar_description=f"Calculating pathway coverage: {id_genome}",
-        progressbar=False,
-    )
-
-    coverage_data = {}
-    step_coverage_data = {}
-    for id_pathway, results in pathway_to_results.items():
-        coverage_data[id_pathway] = results["coverage"]
-        step_coverage_data[id_pathway] = {
-            f"{step[0]}-{step[1]}": value
-            for step, value in results["step_coverage"].items()
-        }
-
-    return (
-        id_genome,
-        pathway_to_results if _worker_serialize_output else None,
-        coverage_data,
-        step_coverage_data,
-    )
 
 def main(args=None):
     # Options
@@ -145,42 +106,32 @@ def main(args=None):
     # Coverage table
     logger.info(f"Calculating pathway coverage")
  
-    # Parallel execution
     serialize_output = not opts.no_serialized_output
-    output_data = {} if serialize_output else None
-    coverage_table = defaultdict(dict)
-    step_coverage_data = defaultdict(dict)
-
-    with ProcessPoolExecutor(max_workers=opts.n_jobs, initializer=_init_worker, initargs=(database, serialize_output)) as executor:
-        # Submit all jobs
-        futures = {
-            executor.submit(process_genome, id_genome, genome_kos): id_genome
-            for id_genome, genome_kos in genome_to_kos.items()
-        }
-
-        # Collect results with progress bar
-        for future in tqdm(as_completed(futures), total=len(futures), desc="Processing genomes"):
-            id_genome, pathway_to_results, coverage_data, genome_step_coverage = future.result()
-            if serialize_output:
-                output_data[id_genome] = pathway_to_results
-            coverage_table[id_genome] = coverage_data
-
-            # Collect step coverage data
-            for id_pathway, steps in genome_step_coverage.items():
-                for step_label, value in steps.items():
-                    step_coverage_data[id_genome][(id_pathway, step_label)] = value
+    coverages, step_coverages, pathway_results = profile_pathway_coverage(
+        genome_to_kos=genome_to_kos,
+        database=database,
+        n_jobs=opts.n_jobs,
+        serialize_output=serialize_output,
+    )
 
     # Coverage table
-    df_coverage_table = pd.DataFrame(coverage_table).T.fillna(0.0)
-    df_coverage_table = df_coverage_table.loc[:,sorted(df_coverage_table.columns, key=lambda id_pathway:int(id_pathway[1:]))]
-    df_coverage_table.index.name = opts.index_name
+    df_coverage_table = pd.Series(coverages)
+    df_coverage_table.index = pd.MultiIndex.from_tuples(
+        df_coverage_table.index,
+        names=[opts.index_name, "id_pathway"],
+    )
+    df_coverage_table = df_coverage_table.unstack(level="id_pathway").fillna(0.0)
+    df_coverage_table.columns.name = None
+    df_coverage_table = df_coverage_table.loc[
+        :, sorted(df_coverage_table.columns, key=lambda id_pathway: int(id_pathway[1:]))
+    ]
 
     output_filepath = os.path.join(opts.output_directory, "pathway_coverage.tsv.gz")
     logger.info(f"Writing pathway coverage table: {output_filepath}")
     df_coverage_table.to_csv(output_filepath, sep="\t")
     
     # Step coverage table (new)
-    df_step_coverage = pd.DataFrame(step_coverage_data).T.fillna(0).astype(int)
+    df_step_coverage = pd.DataFrame(step_coverages).T.fillna(0).astype(int)
     
     # Create MultiIndex columns
     if not df_step_coverage.empty:
@@ -201,7 +152,7 @@ def main(args=None):
     if serialize_output:
         output_filepath = os.path.join(opts.output_directory, "pathway_output.pkl.gz")
         logger.info(f"Writing pathway output pickle: {output_filepath}")
-        write_pickle(dict(output_data), output_filepath)
+        write_pickle(pathway_results, output_filepath)
     else:
         logger.info("Skipping pathway_output.pkl.gz (--no_serialized_output)")
     
