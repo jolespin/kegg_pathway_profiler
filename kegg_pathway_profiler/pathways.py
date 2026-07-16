@@ -376,6 +376,138 @@ def pathway_coverage_wrapper(
     
     return pathway_to_results
 
+# Module-level globals for multiprocessing workers
+_worker_database = None
+_worker_serialize_output = False
+
+def _init_coverage_worker(database, serialize_output):
+    global _worker_database, _worker_serialize_output
+    _worker_database = database
+    _worker_serialize_output = serialize_output
+
+def _process_genome_coverage(id_genome, genome_kos):
+    pathway_to_results = pathway_coverage_wrapper(
+        evaluation_kos=genome_kos,
+        database=_worker_database,
+        progressbar=False,
+    )
+    coverages = {}
+    step_coverages = {}
+    for id_pathway, results in pathway_to_results.items():
+        coverages[(id_genome, id_pathway)] = results["coverage"]
+        for step, value in results["step_coverage"].items():
+            step_label = f"{step[0]}-{step[1]}"
+            step_coverages[(id_pathway, step_label)] = value
+    return (
+        id_genome,
+        coverages,
+        step_coverages,
+        pathway_to_results if _worker_serialize_output else None,
+    )
+
+def profile_pathway_coverage(
+    genome_to_kos: dict,
+    database: dict,
+    n_jobs: int = 1,
+    serialize_output: bool = False,
+    show_progress: bool = True,
+) -> tuple:
+    """
+    Profile pathway coverage across one or more genomes.
+
+    Uses ProcessPoolExecutor when n_jobs > 1, sequential loop when n_jobs == 1
+    (avoids multiprocessing overhead and simplifies debugging for small inputs).
+
+    Parameters
+    ----------
+    genome_to_kos : dict
+        {id_genome: set_of_kos} mapping genome/cluster IDs to their KO sets.
+    database : dict
+        Pathway database keyed by pathway ID (i.e., pathway_to_data).
+    n_jobs : int
+        Number of parallel workers. 1 = sequential, -1 = all CPUs. [Default: 1]
+    serialize_output : bool
+        If True, also return the full pathway_coverage_wrapper results per genome.
+        Useful for writing pathway_output.pkl.gz; skip to save memory. [Default: False]
+    show_progress : bool
+        Show tqdm progress bar. [Default: True]
+
+    Returns
+    -------
+    coverages : dict
+        {(id_genome, id_pathway): float} — pathway coverage values.
+    step_coverages : dict
+        {id_genome: {(id_pathway, step_label): int}} — per-step binary coverage.
+    pathway_results : dict or None
+        {id_genome: pathway_to_results} when serialize_output=True, else None.
+    """
+    if n_jobs == -1:
+        from multiprocessing import cpu_count
+        n_jobs = cpu_count()
+
+    coverages = {}
+    step_coverages = {}
+    pathway_results = {} if serialize_output else None
+
+    if n_jobs == 1:
+        iterator = genome_to_kos.items()
+        if show_progress:
+            iterator = tqdm(
+                iterator,
+                total=len(genome_to_kos),
+                desc="Profiling pathway coverage",
+            )
+
+        for id_genome, genome_kos in iterator:
+            results = pathway_coverage_wrapper(
+                evaluation_kos=genome_kos,
+                database=database,
+                progressbar=False,
+            )
+
+            step_coverages[id_genome] = {}
+            for id_pathway, data in results.items():
+                coverages[(id_genome, id_pathway)] = data["coverage"]
+                for step, value in data["step_coverage"].items():
+                    step_label = f"{step[0]}-{step[1]}"
+                    step_coverages[id_genome][(id_pathway, step_label)] = value
+
+            if serialize_output:
+                pathway_results[id_genome] = results
+    else:
+        from concurrent.futures import (
+            ProcessPoolExecutor,
+            as_completed,
+        )
+
+        with ProcessPoolExecutor(
+            max_workers=n_jobs,
+            initializer=_init_coverage_worker,
+            initargs=(database, serialize_output),
+        ) as executor:
+            futures = {
+                executor.submit(_process_genome_coverage, id_genome, genome_kos): id_genome
+                for id_genome, genome_kos in genome_to_kos.items()
+            }
+
+            iterator = as_completed(futures)
+            if show_progress:
+                iterator = tqdm(
+                    iterator,
+                    total=len(futures),
+                    desc="Profiling pathway coverage",
+                )
+
+            for future in iterator:
+                id_genome, genome_coverages, genome_step_coverages, genome_results = future.result()
+                coverages.update(genome_coverages)
+                step_coverages[id_genome] = genome_step_coverages
+
+                if serialize_output:
+                    pathway_results[id_genome] = genome_results
+
+    return coverages, step_coverages, pathway_results
+
 
 # @dataclass
 class Pathway:
