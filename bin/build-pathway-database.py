@@ -129,9 +129,9 @@ def main(args=None):
     parser_ebi = parser.add_argument_group('EBI repository arguments (recommended)')
     parser_ebi.add_argument("--ebi", type=str, default=None,
         help = "Download from EBI kegg-pathways-completeness-tool GitHub repository (recommended).\n"
-               "Accepts: 'latest' (latest release), a release tag (e.g., '1.4.3'),\n"
+               "Accepts: 'latest' (latest release), a release tag (e.g., '1.4.4'),\n"
                "or 'branch:<name>' (e.g., 'branch:master').\n"
-               "Examples: --ebi latest, --ebi 1.4.3, --ebi branch:master")
+               "Examples: --ebi latest, --ebi 1.4.4, --ebi branch:master")
 
     parser_local = parser.add_argument_group('Local arguments')
     parser_local.add_argument("-i","--pathway_definitions", type=str, help = "path/to/pathway_definitions.tsv.  [id_pathway]<tab>[definition], No header.")
