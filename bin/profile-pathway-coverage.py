@@ -114,6 +114,8 @@ def main(args=None):
         serialize_output=serialize_output,
     )
 
+    genomes = sorted(genome_to_kos.keys())
+
     # Coverage table
     df_coverage_table = pd.Series(coverages)
     df_coverage_table.index = pd.MultiIndex.from_tuples(
@@ -125,6 +127,12 @@ def main(args=None):
     df_coverage_table = df_coverage_table.loc[
         :, sorted(df_coverage_table.columns, key=lambda id_pathway: int(id_pathway[1:]))
     ]
+
+    df_coverage_table = df_coverage_table.reindex(genomes, fill_value=0.0)
+
+    n_genomes_no_hits = (df_coverage_table.sum(axis=1) == 0).sum()
+    if n_genomes_no_hits > 0:
+        logger.info(f"Number of genomes with 0 module hits: {n_genomes_no_hits}")
 
     output_filepath = os.path.join(opts.output_directory, "pathway_coverage.tsv.gz")
     logger.info(f"Writing pathway coverage table: {output_filepath}")
@@ -142,6 +150,7 @@ def main(args=None):
         
         # Sort columns by pathway ID then step
         df_step_coverage = df_step_coverage.sort_index(axis=1, level=0, key=lambda x: x.str[1:].astype(int))
+        df_step_coverage = df_step_coverage.reindex(genomes, fill_value=0).astype(int)
         df_step_coverage.index.name = opts.index_name
         
         output_filepath = os.path.join(opts.output_directory, "step_coverage.tsv.gz")
